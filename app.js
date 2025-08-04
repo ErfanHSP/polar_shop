@@ -1,5 +1,9 @@
 const express = require("express")
 const app = express()
+const errorHandler = require("./src/middlewares/errorHandler")
+
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
 
 app.get("/health", (req, res, next) => {
     try {
@@ -12,9 +16,10 @@ app.get("/health", (req, res, next) => {
     }
 })
 
-app.use((err, req, res, next) => {
-    console.log(err)
-})
+// routes
+const authRouter = require("./src/module/auth/auth.routes")
+app.use("/auth", authRouter)
 
+app.use(errorHandler)
 
 module.exports = app

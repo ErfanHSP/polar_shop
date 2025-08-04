@@ -1,24 +1,17 @@
 const mysql = require("mysql2")
 require("dotenv").config()
 
+const isDevelopmentMode = process.env.NODE_ENV === "development";
+const pool = mysql
+  .createPool(
+    isDevelopmentMode
+      ? process.env.MYSQL_DEV_DB
+      : process.env.MYSQL_PRODUCTION_DB
+  )
+  .promise();
 
-const connectDB = () => {
-    const isDevelopmentMode = process.env.NODE_ENV === "development"
-    if (isDevelopmentMode) {
-        const pool = mysql.createPool(process.env.MYSQL_DEV_DB).promise()
-        pool.getConnection()
-            .then(() => console.log("✅ DB connection was successful"))
-            .catch((err) => console.error("❌ DB connection error: ", err))
-    } else {
-        const pool = mysql.createPool(process.env.MYSQL_PRODUCTION_DB).promise()
-        pool.getConnection()
-            .then(() => console.log("✅ DB connection was successful"))
-            .catch((err) => console.error("❌ DB connection error: ", err))
-    }
+pool.getConnection()
+  .then(() => console.log("✅ DB connection was successful"))
+  .catch((err) => console.error("❌ DB connection error: ", err));
 
-}
-
-
-
-
-module.exports = connectDB
+module.exports = pool;
