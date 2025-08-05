@@ -5,7 +5,6 @@ const usersRepository = require("./../repositories/users")
 const auth = async (req, res, next) => {
     try {
         const token = req.cookies["access-token"]
-        
         if (!token) {
             return res.status(401).json({
                 message: "Access token not found!",

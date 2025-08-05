@@ -21,7 +21,7 @@ exports.signup = async (req, res, next) => {
         const refreshToken = jwt.sign({userID: user.id, role: user.role}, process.env.REFRESH_TOKEN_SECRET, {
             expiresIn: `${process.env.REFRESH_TOKEN_EXPIRE}d`
         })
-        await RedisService.setRefreshToken(user.id)
+        await RedisService.setRefreshToken(user.id, refreshToken)
         res.status(201).json({
             success: true,
             message: "New user created successfully.",
@@ -66,7 +66,7 @@ exports.login = async (req, res, next) => {
         const refreshToken = jwt.sign({userID: user.id, role: user.role}, process.env.REFRESH_TOKEN_SECRET, {
             expiresIn: `${process.env.REFRESH_TOKEN_EXPIRE}d`
         })
-        await RedisService.setRefreshToken(user.id)
+        await RedisService.setRefreshToken(user.id, refreshToken)
         res.status(200).json({
             success: true,
             message: "Logged in successfully.",
@@ -93,3 +93,40 @@ exports.logout = async (req, res, next) => {
     }
 }
 
+exports.refreshAccessToken = async (req, res, next) => {
+    try {
+        const token = req.cookies["refresh-token"] || req.headers['authorization']?.split(' ')[1]
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh-token not found!"
+            })
+        }
+        const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET)
+        const savedToken = await RedisService.getRefreshToken(decoded.userID)
+        const user = await usersRepository.findById(decoded.userID)
+        const compareTokens = bcrypt.compareSync(token, savedToken)
+        if (!compareTokens) {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh-token is not valid."
+            })
+        }
+        const newAccessToken = jwt.sign({userID: user.id, role: user.role}, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: `${process.env.ACCESS_TOKEN_EXPIRE}m`
+        })
+        return res.status(200).json({
+            success: true,
+            message: "Access token successfully refreshed!",
+            token: newAccessToken
+        })
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(403).json({
+                success: false,
+                message: 'Refresh token expired',
+            });
+        }
+        next(error)   
+    }
+}

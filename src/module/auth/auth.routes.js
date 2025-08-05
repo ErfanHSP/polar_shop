@@ -8,5 +8,6 @@ const {auth} = require("./../../middlewares/auth")
 router.post("/sign-up", bodyValidator(registerValidator), controller.signup)
 router.post("/sign-in", bodyValidator(loginValidator), controller.login)
 router.delete("/sign-out", auth, controller.logout)
+router.post("/refresh-token", controller.refreshAccessToken)
 
 module.exports = router
