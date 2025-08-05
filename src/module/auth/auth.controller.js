@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt")
 const usersRepository = require("./../../repositories/users")
 const jwt = require("jsonwebtoken")
 
+
 exports.signup = async (req, res, next) => {
     try {
         const {email, username, fullname, password} = req.body
@@ -29,6 +30,49 @@ exports.signup = async (req, res, next) => {
             }
         })
 
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.login = async (req, res, next) => {
+    try {
+        const {email, password} = req.body
+        if (!email || !password) {
+            return res.status(403).json({
+                success: false,
+                error: "Validation failed."
+            })
+        }
+        const user = await usersRepository.findByEmail(email)
+        if (!user) {
+            return res.status(403).json({
+                success: false,
+                message: "Email or password is wrong."
+            })
+        }
+        
+        const isPasswordCorrect = bcrypt.compareSync(password, user.password)
+        if (!isPasswordCorrect) {
+             return res.status(403).json({
+                success: false,
+                message: "Email or password is wrong."
+            })
+        }
+        const accessToken = jwt.sign({userID: user.id, role: user.role}, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: `${process.env.ACCESS_TOKEN_EXPIRE}m`
+        })
+        const refreshToken = jwt.sign({userID: user.id, role: user.role}, process.env.REFRESH_TOKEN_SECRET, {
+            expiresIn: `${process.env.REFRESH_TOKEN_EXPIRE}d`
+        })
+        res.status(200).json({
+            success: true,
+            message: "Logged in successfully.",
+            tokens: {
+                accessToken,
+                refreshToken
+            }
+        })
     } catch (error) {
         next(error)
     }

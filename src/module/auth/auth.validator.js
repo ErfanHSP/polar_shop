@@ -7,7 +7,12 @@ const registerValidator = yup.object().shape({
     password: yup.string().min(8, "Password must be more than 8 characters.").max(30, "Password is too long.")
 })
 
+const loginValidator = yup.object().shape({
+    email: yup.string().email("Email is not valid.").required("Email is required!"),
+    password: yup.string()
+})
 
 module.exports = {
-    registerValidator
+    registerValidator,
+    loginValidator
 }

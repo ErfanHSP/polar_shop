@@ -8,6 +8,13 @@ const create = async (fullname, username, email, password) => {
     return user
 }
 
+const findByEmail = async (email) => {
+    const selectQuery = "SELECT * FROM polar_shop_db.users WHERE email = ?"
+    const [insertResult] = await db.query(selectQuery, [email])
+    return insertResult[0]
+}
+
 module.exports = {
-    create
+    create,
+    findByEmail
 }
