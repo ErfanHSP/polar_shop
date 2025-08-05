@@ -16,10 +16,14 @@ const getRefreshTokenRedisKey = (userId) => {
 
 const setRefreshToken = async (userId, refreshToken) => {
     return await redis.set(getRefreshTokenRedisKey(userId), refreshToken, "EX", parseExpireTime(process.env.REFRESH_TOKEN_EXPIRE))
+}
 
+const deleteRefreshToken = async (userId) => {
+    return await redis.del(getRefreshTokenRedisKey(userId))
 }
 
 module.exports = {
     setRefreshToken,
-    getRefreshTokenRedisKey
+    getRefreshTokenRedisKey,
+    deleteRefreshToken
 }

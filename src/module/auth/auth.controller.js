@@ -79,3 +79,17 @@ exports.login = async (req, res, next) => {
         next(error)
     }
 }
+
+exports.logout = async (req, res, next) => {
+    try {
+        const user = req.user
+        await RedisService.deleteRefreshToken(user.id)
+        return res.status(200).json({
+            success: true,
+            message: "Successfully logged out."
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+

@@ -1,9 +1,11 @@
 const express = require("express")
 const app = express()
+const cookieParser = require("cookie-parser")
 const errorHandler = require("./src/middlewares/errorHandler")
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
+app.use(cookieParser("coo-123sec.q"))
 
 app.get("/health", (req, res, next) => {
     try {
