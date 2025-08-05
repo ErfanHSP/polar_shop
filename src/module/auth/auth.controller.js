@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt")
 const usersRepository = require("./../../repositories/users")
 const jwt = require("jsonwebtoken")
-
+const RedisService = require("./../../services/redis")
 
 exports.signup = async (req, res, next) => {
     try {
@@ -21,6 +21,7 @@ exports.signup = async (req, res, next) => {
         const refreshToken = jwt.sign({userID: user.id, role: user.role}, process.env.REFRESH_TOKEN_SECRET, {
             expiresIn: `${process.env.REFRESH_TOKEN_EXPIRE}d`
         })
+        await RedisService.setRefreshToken(user.id)
         res.status(201).json({
             success: true,
             message: "New user created successfully.",
@@ -51,7 +52,7 @@ exports.login = async (req, res, next) => {
                 message: "Email or password is wrong."
             })
         }
-        
+
         const isPasswordCorrect = bcrypt.compareSync(password, user.password)
         if (!isPasswordCorrect) {
              return res.status(403).json({
@@ -65,6 +66,7 @@ exports.login = async (req, res, next) => {
         const refreshToken = jwt.sign({userID: user.id, role: user.role}, process.env.REFRESH_TOKEN_SECRET, {
             expiresIn: `${process.env.REFRESH_TOKEN_EXPIRE}d`
         })
+        await RedisService.setRefreshToken(user.id)
         res.status(200).json({
             success: true,
             message: "Logged in successfully.",
