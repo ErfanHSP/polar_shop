@@ -14,6 +14,9 @@ const parseExpireTime = (time) => {
 const getRefreshTokenRedisKey = (userId) => {
     return `refresh-token:${userId}`
 }
+const getResetTokenRedisKey = (userId) => {
+    return `reset-token:${userId}`
+}
 
 const setRefreshToken = async (userId, refreshToken) => {
     const hashToken = bcrypt.hashSync(refreshToken, 10)
@@ -28,9 +31,15 @@ const getRefreshToken = async (userId) => {
     return await redis.get(getRefreshTokenRedisKey(userId))
 }
 
+const setResetToken = async (userId, resetToken) => {
+    const hashToken = bcrypt.hashSync(resetToken, 10)
+    return await redis.set(getResetTokenRedisKey(userId), hashToken, "EX", parseExpireTime(process.env.RESET_TOKEN_EXPIRE))
+}
+
 module.exports = {
     setRefreshToken,
     getRefreshTokenRedisKey,
     deleteRefreshToken,
-    getRefreshToken
+    getRefreshToken,
+    setResetToken
 }

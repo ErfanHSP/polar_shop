@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt")
 const usersRepository = require("./../../repositories/users")
 const jwt = require("jsonwebtoken")
 const RedisService = require("./../../services/redis")
+const NodeMailer = require("./../../services/nodemailer")
 
 exports.signup = async (req, res, next) => {
     try {
@@ -11,6 +12,13 @@ exports.signup = async (req, res, next) => {
             return res.status(403).json({
                 success: false,
                 error: "Validation failure."
+            })
+        }
+        const isEmailorUsernameDuplicated = await usersRepository.findByEmailOrUsername(email, username)
+        if (isEmailorUsernameDuplicated) {
+            return res.status(409).json({
+                success: false,
+                message: "Username or Email is already in use."
             })
         }
         const hashPassword = bcrypt.hashSync(password, 10)
@@ -128,5 +136,31 @@ exports.refreshAccessToken = async (req, res, next) => {
             });
         }
         next(error)   
+    }
+}
+
+exports.forgetPassword = async (req, res, next) => {
+    try {
+        const {email} = req.body
+        const user = await usersRepository.findByEmail(email)
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: "If this email address exists in our database, reset password will send to your email!"
+            })
+        }
+        const resetToken = jwt.sign({userID: user.id, role: user.role}, process.env.RESET_TOKEN_SECRET, {
+            expiresIn: `${process.env.RESET_TOKEN_EXPIRE}m`
+        })
+        await RedisService.setResetToken(user.id, resetToken)
+        const url = `http://front-url/${resetToken}`
+        await NodeMailer(email, url)
+        return res.status(200).json({
+            success: true,
+            message: "If this email address exists in our database, reset password will send to your email!"
+        })
+
+    } catch (error) {
+        next(error)
     }
 }

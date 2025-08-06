@@ -9,5 +9,6 @@ router.post("/sign-up", bodyValidator(registerValidator), controller.signup)
 router.post("/sign-in", bodyValidator(loginValidator), controller.login)
 router.delete("/sign-out", auth, controller.logout)
 router.post("/refresh-token", controller.refreshAccessToken)
+router.put("/forget-password", controller.forgetPassword)
 
 module.exports = router
